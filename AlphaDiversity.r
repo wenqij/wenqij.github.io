@@ -1,5 +1,3 @@
-#SNP alpha-diversity
-#usage: Rscript alpha-diversity.r filename #filesname is the file containing the SNP matrix.
 d.chao<-function(A,lev,q)
 {
   tot<-sum(A)
