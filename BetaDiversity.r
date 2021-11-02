@@ -1,0 +1,124 @@
+# Beta diversity and similarity
+# usage: Rscript beta_diversity_similarity.r file1 file2 #file1 and file2 are two files which contain SNPmatrix.
+#Function for computing diversity
+d.chao<-function(A,lev,q)
+{
+	tot<-sum(A)
+	eA<-A/tot
+	eA<-eA[eA>0]
+	if(is.vector(A)){
+	cA<-A
+	N<-1
+	}else{
+	cA<-colSums(A)
+	N<-nrow(A)
+}
+ecA<-cA/tot
+ecA<-ecA[ecA>0]
+if(lev=='alpha'){
+	if(q!=1){
+	Da<-(1/N)*(sum(eA^q))^(1/(1-q))
+	D.value<-Da
+	}else{
+Da<-exp(-sum(eA*log(eA))-log(N))
+D.value<-Da
+}
+}
+if(lev=='beta'){
+	D.value<-d.chao(A,lev='gamma',q)/d.chao(A,lev='alpha',q)
+	}
+if(lev=='gamma'){
+	if(q!=1){
+	Dg<-(sum(ecA^q))^(1/(1-q))
+	D.value<-Dg
+	}else{
+	Dg<-exp(-sum(ecA*log(ecA)))
+	D.value<-Dg
+	}
+}
+D.value
+}
+#Functiton for computing similarity: Cq, Uq, Sq, Vq
+Cq<-function(A,beta,q,N){
+if(q!=1){
+	cq<-(((1/beta)^(q-1))-((1/N)^(q-1)))/(1-(1/N)^(q-1))
+	}
+else{
+	26
+	tot<-sum(A)
+	eA<-A/tot
+	cs<-colSums(eA)
+	lcs<-log(cs)
+	x<-cs*lcs
+	x<-x[x!="NaN"]
+	hb=-(sum(x))
+	pa=A/rowSums(A)
+	x<-pa*log(pa)
+	y<-rowSums(x,na.rm=T)
+	z<-rowSums(A)/tot
+	yz=y*z
+	x<-yz[yz!="NaN"]
+	ha=-(sum(x))
+	wa=rowSums(A)/tot
+	hc=sum(wa*log(wa))
+	cq=(ha-hb-hc)/log(N)
+	}
+cq
+}
+Uq<-function(A,beta,q,N){
+if(q!=1){
+	uq<-(((1/beta)^(1-q))-((1/N)^(1-q)))/(1-(1/N)^(1-q))
+	}
+else{
+	tot<-sum(A)
+	eA<-A/tot
+	cs<-colSums(eA)
+	lcs<-log(cs)
+	x<-cs*lcs
+	x<-x[x!="NaN"]
+	hb=-(sum(x))
+	pa=A/rowSums(A)
+	x<-pa*log(pa)
+	y<-rowSums(x,na.rm=T)
+	z<-rowSums(A)/tot
+	yz=y*z
+	x<-yz[yz!="NaN"]
+	ha=-(sum(x))
+	wa=rowSums(A)/tot
+	hc=sum(wa*log(wa))
+	uq=(ha-hb-hc)/log(N)
+	}
+uq
+}
+Sq<-function(A,beta,q,N){
+	sq<-((1/beta)-(1/N))/(1-1/N)
+	sq
+	}
+Vq<-function(A,beta,q,N){
+	vq<-1-((beta-1)/(N-1))
+	vq
+	}
+# Main process
+args=commandArgs(T)
+
+dam=read.table("scaffold_10_SNPmatrixGeneCount.txt",header=T,sep="\t",stringsAsFactors=F)
+dan=read.table("scaffold_10_SNPmatrixGeneCount.txt",header=T,sep="\t",stringsAsFactors=F)
+IDm=dam[,1]
+IDn=dan[,1]
+Res=numeric()
+for(x in 1:nrow(dam)){
+for(y in 1:nrow(dan)){
+sda<-rbind(dam[x,2:ncol(dam)],dan[y,2:ncol(dan)])
+for(q in 0:4){
+	beta<-d.chao(sda,"beta",q)
+	cqn<-Cq(sda,beta,q,2)
+	uqn<-Uq(sda,beta,q,2)
+	sqn<-Sq(sda,beta,q,2)
+	vqn<-Vq(sda,beta,q,2)
+	res<-cbind(IDm[x],IDn[y],q,beta,cqn,uqn,sqn,vqn)
+	Res=rbind(Res,res)
+	}
+	}
+	}
+colnames(Res)=c("ID1","ID2","order","beta.D","cq","uq","sq","vq")
+write.table(Res,"scaffold_10_Beta-diversity.txt",row.names=F,col.names=T,sep="\t",quote=F)
