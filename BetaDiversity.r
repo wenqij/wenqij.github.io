@@ -1,6 +1,3 @@
-# Beta diversity and similarity
-# usage: Rscript beta_diversity_similarity.r file1 file2 #file1 and file2 are two files which contain SNPmatrix.
-#Function for computing diversity
 d.chao<-function(A,lev,q)
 {
 	tot<-sum(A)
